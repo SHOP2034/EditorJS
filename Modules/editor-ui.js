@@ -1,25 +1,51 @@
-// modules/editor-ui.js
-// UI helpers: render file list entries and update editor state.
-// No DOM creation of main layout; trabaja con nodos existentes.
+import { readFiles } from "./files.js";
+import { saveToLocal } from "./storage.js";
 
-export function renderFileList(files, containerEl, activeIndex){
-  containerEl.innerHTML = '';
-  files.forEach((f,i)=>{
-    const div = document.createElement('div');
-    div.className = 'fileItem' + (i === activeIndex ? ' active' : '');
-    const name = document.createElement('div');
-    name.textContent = f.name + (f.dirty ? ' *' : '');
-    name.style.fontWeight = '700';
-    const meta = document.createElement('div');
-    meta.className = 'small';
-    meta.textContent = `${f.size} bytes • ${f.date}`;
-    div.appendChild(name);
-    div.appendChild(meta);
-    div.addEventListener('click', ()=> {
-      const ev = new CustomEvent('file-select', { detail: { index: i } });
-      containerEl.dispatchEvent(ev);
-    });
-    containerEl.appendChild(div);
+export function setupEditorUI(onCodeLoaded, onRunClicked) {
+  const input = document.getElementById("fileInput");
+  const fileList = document.getElementById("fileList");
+  const codeArea = document.getElementById("codeArea");
+
+  let files = [];
+
+  input.addEventListener("change", async e => {
+    files = await readFiles(e.target.files);
+    renderList();
   });
-}
 
+  function renderList() {
+    fileList.innerHTML = "";
+    files.forEach((f, i) => {
+      const li = document.createElement("li");
+      li.textContent = f.name;
+      li.onclick = () => selectFile(i);
+      fileList.appendChild(li);
+    });
+  }
+
+  function selectFile(index) {
+    fileList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
+    const selected = fileList.children[index];
+    selected.classList.add("active");
+    codeArea.value = files[index].content;
+    onCodeLoaded(files[index].content);
+  }
+
+  document.getElementById("saveBtn").onclick = () => {
+    const blob = new Blob([codeArea.value], { type: "text/javascript" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = fileList.querySelector(".active")?.textContent || "script.js";
+    a.click();
+  };
+
+  document.getElementById("saveLocalBtn").onclick = () => {
+    saveToLocal("lastCode", codeArea.value);
+    alert("Código guardado en localStorage.");
+  };
+
+  document.getElementById("runBtn").onclick = () => {
+    onCodeLoaded(codeArea.value);
+    onRunClicked();
+  };
+}
