@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <title>Editor JS + Preview (móvil)</title>
+  <style>
+    :root{--bg:#0f1720;--panel:#0b1220;--accent:#06b6d4;--muted:#94a3b8}
+    html,body{height:100%;margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#071126 0%, #082033 100%);color:#e6eef6}
+    .wrap{display:flex;flex-direction:column;height:100vh;gap:8px;padding:8px;box-sizing:border-box}
+    header{display:flex;align-items:center;gap:8px}
+    header h1{font-size:16px;margin:0}
+    main{display:flex;flex:1;gap:8px;align-items:stretch}
+    /* Left: editor column */
+    .editorCol{flex:1;display:flex;flex-direction:column;gap:8px;min-width:260px}
+    .filesList{background:rgba(255,255,255,0.03);padding:8px;border-radius:10px;max-height:150px;overflow:auto}
+    .fileItem{display:flex;align-items:center;justify-content:space-between;padding:6px;border-radius:8px;cursor:pointer}
+    .fileItem:hover{background:rgba(255,255,255,0.02)}
+    .fileItem.active{background:rgba(6,182,212,0.12)}
+    .editorArea{flex:1;display:flex;flex-direction:column;gap:6px}
+    textarea#codeEditor{flex:1;width:100%;resize:none;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:#071726;color:#e8f9fb;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:13px;line-height:1.4}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button.btn{background:var(--accent);border:0;color:#042028;padding:8px 10px;border-radius:8px;font-weight:700;min-width:78px}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    /* Right: preview column */
+    .previewCol{width:320px;max-width:42%;display:flex;flex-direction:column;gap:8px}
+    .canvasWrap{flex:1;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#9ad0ff22,#ffffff08);display:flex;align-items:center;justify-content:center;padding:8px}
+    canvas{width:100%;height:100%;display:block;border-radius:8px;background:linear-gradient(180deg,#9ad0ff10,#fff0)}
+    .small{font-size:12px;color:var(--muted)}
+    footer{display:flex;gap:8px;align-items:center;justify-content:center;padding-top:4px}
+    input[type="file"]{display:none}
+    .fileLabel{background:#0b1f2a;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+    @media(max-width:840px){
+      main{flex-direction:column}
+      .previewCol{width:100%;max-width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Editor JS • Previsualizador</h1>
+      <div class="small">Carga, edita y ejecuta archivos .js (ej: <code>bird.js</code>)</div>
+    </header>
+
+    <main>
+      <div class="editorCol">
+        <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+          <label class="fileLabel" for="fileInput">📂 Cargar JS</label>
+          <input id="fileInput" type="file" accept=".js,application/javascript" multiple />
+          <div class="small">Archivos cargados:</div>
+        </div>
+
+        <div class="filesList" id="filesList" aria-live="polite"></div>
+
+        <div class="editorArea">
+          <div style="display:flex;gap:8px">
+            <div style="flex:1"><strong id="currentFileName">Ningún archivo</strong></div>
+            <div class="small" id="fileMeta"></div>
+          </div>
+
+          <textarea id="codeEditor" placeholder="// Carga un archivo .js y su contenido aparecerá aquí"></textarea>
+
+          <div class="controls">
+            <button id="saveBtn" class="btn">💾 Guardar (descargar)</button>
+            <button id="saveLocalBtn" class="ghost">💾 Guardar local</button>
+            <button id="runBtn" class="btn">▶️ Ejecutar</button>
+            <button id="stopBtn" class="ghost">⛔ Detener</button>
+            <button id="restoreBtn" class="ghost">↺ Restaurar original</button>
+          </div>
+          <div class="small">Sugerencia: si vas a editar funciones exportadas (ej: <code>export function drawDuck(...)</code>) guarda y pulsa <strong>Ejecutar</strong> para ver los cambios en el canvas.</div>
+        </div>
+      </div>
+
+      <div class="previewCol">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div><strong>Previsualización</strong></div>
+          <div class="small" id="runStatus">Idle</div>
+        </div>
+        <div class="canvasWrap">
+          <canvas id="previewCanvas" width="640" height="480"></canvas>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:space-between;align-items:center">
+          <div class="small">DPR y tamaño del canvas se ajustan automáticamente</div>
+          <div class="small">Frame: <span id="frameCounter">0</span></div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="small">Esta versión no depende de internet y funciona con archivos locales. Si tu archivo exporta una función <code>drawDuck(ctx, BIRD, ...)</code> la llamada se intentará automáticamente.</div>
+    </footer>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
